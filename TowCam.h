@@ -21,6 +21,15 @@
 #define PROGRAM_VERSION    "1.0"
 #define DEFAULT_LATITUDE   30.0
 
+typedef enum {
+   BAILEY,
+   ADAM_DIO,
+   ADAM_AIO,
+   UNKNOWN_SWITCH_TYPE
+} eSwitchTypeT;
+
+#define ERRONEOUS_SWITCH_CHANNEL    10
+
 class SwitchWidget : public QWidget
 {
 	Q_OBJECT
@@ -72,7 +81,9 @@ private:
 
 
 
-	SwitchWidget			*switches[4];
+   SwitchWidget            *switches[4];
+   eSwitchTypeT            switchType[4];
+   int                     switchChannel[4];
 
     double                  latitude;
 

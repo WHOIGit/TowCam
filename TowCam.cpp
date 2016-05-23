@@ -136,9 +136,32 @@ TowCam::TowCam(IniFile  iniFile)
    for(int switchNumber = 0; switchNumber < 4; switchNumber++)
       {
          char scratchSwitchName[256];
-         sprintf(scratchSwitchName,"SWITCH_%d_NAME",switchNumber+1);
+         snprintf(scratchSwitchName,256,"SWITCH_%d_NAME",switchNumber+1);
          char *newSwitchName = iniFile.read_string("GENERAL",scratchSwitchName,"UNKNOWN");
          switches[switchNumber] = new SwitchWidget(switchNumber,(QString)newSwitchName);
+         snprintf(scratchSwitchName,256,"SWITCH_%d_TYPE",switchNumber + 1);
+         int thisSwitchType = iniFile.read_int("GENERAL",scratchSwitchName,(int)UNKNOWN_SWITCH_TYPE);
+         if((0 <= thisSwitchType) && (ADAM_AIO <= thisSwitchType))
+            {
+               switchType[switchNumber] = (eSwitchTypeT)thisSwitchType;
+            }
+         else
+            {
+               switchType[switchNumber] =  UNKNOWN_SWITCH_TYPE;
+            }
+         if((ADAM_AIO == thisSwitchType) || (ADAM_DIO == thisSwitchType))
+            {
+               snprintf(scratchSwitchName,256,"SWITCH_%d_CHANNEL",switchNumber + 1);
+               int thisSwitchChannel = iniFile.read_int("GENERAL",scratchSwitchName,ERRONEOUS_SWITCH_CHANNEL);
+               if((0 <= thisSwitchChannel)  && (1 >= thisSwitchChannel) )
+                  {
+                     switchChannel[switchNumber] = thisSwitchChannel;
+                  }
+               else
+                  {
+                     switchChannel[switchNumber] = ERRONEOUS_SWITCH_CHANNEL;
+                  }
+            }
       }
 
 
@@ -241,11 +264,70 @@ void  TowCam::switchAction(int swID, bool switchState)
    int  theRealSwitchID = swID+1;
    if(switchState)
       {
-         myCommand = "SW" + QString::number(theRealSwitchID) + " 1\r\n";
+         if(BAILEY == switchType[swID])
+            {
+               myCommand = "SW" + QString::number(theRealSwitchID) + " 1\r\n";
+            }
+         else if (ADAM_DIO == switchType[swID])
+            {
+               if(switchChannel[swID] == ERRONEOUS_SWITCH_CHANNEL)
+                  {
+                     return;
+                  }
+               else
+                  {
+                     myCommand = "#011" + QString::number(switchChannel[swID]) + "01\r";
+                  }
+            }
+         else if (ADAM_AIO == switchType[swID])
+            {
+               if(switchChannel[swID] == ERRONEOUS_SWITCH_CHANNEL)
+                  {
+                     return;
+                  }
+               else
+                  {
+                     myCommand = "#01" + QString::number(switchChannel[swID]) + "05.000\r";
+                  }
+            }
+         else
+            {
+               return;
+            }
       }
    else
       {
-         myCommand = "SW" + QString::number(theRealSwitchID) + " 0\r\n";
+         if(BAILEY == switchType[swID])
+            {
+               myCommand = "SW" + QString::number(theRealSwitchID) + " 0\r\n";
+            }
+         else if (ADAM_DIO == switchType[swID])
+            {
+               if(switchChannel[swID] == ERRONEOUS_SWITCH_CHANNEL)
+                  {
+                     return;
+                  }
+               else
+                  {
+                     myCommand = "#011" + QString::number(switchChannel[swID]) + "00\r";
+                  }
+            }
+         else if (ADAM_AIO == switchType[swID])
+            {
+               if(switchChannel[swID] == ERRONEOUS_SWITCH_CHANNEL)
+                  {
+                     return;
+                  }
+               else
+                  {
+                     myCommand = "#01" + QString::number(switchChannel[swID]) + "00.000\r";
+                  }
+            }
+         else
+            {
+               return;
+            }
+
       }
       emit switchCommand(myCommand);
 
