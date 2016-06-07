@@ -74,7 +74,7 @@ void SwitchWidget::changeSwitchLabels(char status)
 void SwitchWidget::switchStatusChange()
 {
    QRadioButton   *myButton = (QRadioButton *)sender();
-
+    //printf(" in callback\n");
    if(myButton == switchOnRadioButton)
       {
          theMainWindow->switchAction(switchNumber,true);
@@ -141,7 +141,8 @@ TowCam::TowCam(IniFile  iniFile)
          switches[switchNumber] = new SwitchWidget(switchNumber,(QString)newSwitchName);
          snprintf(scratchSwitchName,256,"SWITCH_%d_TYPE",switchNumber + 1);
          int thisSwitchType = iniFile.read_int("GENERAL",scratchSwitchName,(int)UNKNOWN_SWITCH_TYPE);
-         if((0 <= thisSwitchType) && (ADAM_AIO <= thisSwitchType))
+         //printf("switchnumber %d type %d\n",switchNumber,thisSwitchType);
+         if((0 <= thisSwitchType) && (ADAM_AIO >= thisSwitchType))
             {
                switchType[switchNumber] = (eSwitchTypeT)thisSwitchType;
             }
@@ -251,10 +252,14 @@ void TowCam::newSwitches(int sw1,int sw2,int sw3,int sw4)
 
 void TowCam::noSwitchContact()
 {
-   switches[0]->setErrorPalette();
-   switches[1]->setErrorPalette();
-   switches[2]->setErrorPalette();
-   switches[3]->setErrorPalette();
+   for(int switchNumber = 0; switchNumber < 4; switchNumber++)
+      {
+         if(switchType[switchNumber] == BAILEY)
+            {
+               switches[switchNumber]->setErrorPalette();
+            }
+
+      }
 
 }
 
@@ -262,6 +267,7 @@ void  TowCam::switchAction(int swID, bool switchState)
 {
    QString myCommand;
    int  theRealSwitchID = swID+1;
+   //printf(" in cllback, swid %d state %d switch type %d \n",swID,switchState,switchType[swID]);
    if(switchState)
       {
          if(BAILEY == switchType[swID])
@@ -273,10 +279,13 @@ void  TowCam::switchAction(int swID, bool switchState)
                if(switchChannel[swID] == ERRONEOUS_SWITCH_CHANNEL)
                   {
                      return;
+                     //printf(" erroneous switch channel\n");
                   }
                else
                   {
                      myCommand = "#011" + QString::number(switchChannel[swID]) + "01\r";
+                     //printf(" the command1:  %s\n",myCommand.toLatin1().data() );
+
                   }
             }
          else if (ADAM_AIO == switchType[swID])
@@ -329,6 +338,7 @@ void  TowCam::switchAction(int swID, bool switchState)
             }
 
       }
+   //printf(" the command:  %s\n",myCommand.toLatin1().data() );
       emit switchCommand(myCommand);
 
 }

@@ -187,6 +187,10 @@ void TowcamSocketThread::sledSocketDataPending()
    else if(theSocket == myNetworkStructure.switchSocket)
       {
          char sw1,sw2,sw3,sw4;
+         if(buffer.length() <= 2)
+            {
+               return;
+            }
 
          //int items = 4;
          secondsSinceSwitchUpdate = 0;
