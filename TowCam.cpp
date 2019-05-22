@@ -98,6 +98,7 @@ TowCam::TowCam(IniFile  iniFile)
 
    timeLabel = new QLabel("time");
    depthLabel = new QLabel("Depth: unknown");
+   flRangeLabel = new QLabel("Range: unknown");
    //depthValueLabel = new QLabel("unknown");
    QFont myFont = depthLabel->font();
    offFont = myFont;
@@ -106,6 +107,7 @@ TowCam::TowCam(IniFile  iniFile)
    //onFont = myFont;
    depthLabel->setFont(myFont);
    timeLabel->setFont(myFont);
+   flRangeLabel->setFont(myFont);
    //depthValueLabel->setFont(myFont);
    altitudeLabel = new QLabel("Altitude:  unknown");
    //altitudeValueLabel = new QLabel("unknown");
@@ -113,7 +115,7 @@ TowCam::TowCam(IniFile  iniFile)
    //altitudeValueLabel->setFont(myFont);
    altimeterDataWindow = new QTextEdit();
    depthDataWindow = new QTextEdit();
-
+   flDataWindow = new QTextEdit();
 
    QGridLayout *depthLayout = new QGridLayout();
    depthLayout->addWidget(depthLabel,0,0);
@@ -126,11 +128,20 @@ TowCam::TowCam(IniFile  iniFile)
    //altitudeLayout->addWidget(altitudeValueLabel,0,1,1,1,Qt::AlignLeft);
    altitudeLayout->addWidget(altimeterDataWindow,1,0);
 
+   QGridLayout *flLayout = new QGridLayout();
+   flLayout->addWidget(flRangeLabel,0,0);
+   //altitudeLayout->addWidget(altitudeValueLabel,0,1,1,1,Qt::AlignLeft);
+   flLayout->addWidget(flDataWindow,1,0);
+
    QTextDocument *depthDocument = depthDataWindow->document();
    depthDocument->setMaximumBlockCount(256);
 
    QTextDocument *altDocument = altimeterDataWindow->document();
    altDocument->setMaximumBlockCount(256);
+
+   QTextDocument *flDocument = flDataWindow->document();
+   flDocument->setMaximumBlockCount(256);
+
 
 
    for(int switchNumber = 0; switchNumber < 4; switchNumber++)
@@ -180,6 +191,7 @@ TowCam::TowCam(IniFile  iniFile)
    QHBoxLayout    *indicatorLayout = new QHBoxLayout();
    indicatorLayout->addLayout(depthLayout);
    indicatorLayout->addLayout(altitudeLayout);
+   indicatorLayout->addLayout(flLayout);
 
    yAxisMinEdit = new QLineEdit;
    yAxisMinEdit->setValidator(new QDoubleValidator(-200.0, 200.0, 1, this));
@@ -194,6 +206,19 @@ TowCam::TowCam(IniFile  iniFile)
    minLabel = new QLabel("min altitude");
    maxLabel = new QLabel("max altitude");
 
+   flyAxisMinEdit = new QLineEdit;
+   flyAxisMinEdit->setValidator(new QDoubleValidator(-200.0, 200.0, 1, this));
+   flyAxisMinEdit->setMaxLength(4);
+   flyAxisMinEdit->setMaximumWidth(40);
+   connect(flyAxisMinEdit,SIGNAL(editingFinished()),this,SLOT(processRangeBounds()));
+   flyAxisMaxEdit = new QLineEdit;
+   flyAxisMaxEdit->setValidator(new QDoubleValidator(-200.0,200.0, 1, this));
+   flyAxisMaxEdit->setMaxLength(4);
+   flyAxisMaxEdit->setMaximumWidth(40);
+   connect(flyAxisMaxEdit,SIGNAL(editingFinished()),this,SLOT(processRangeBounds()));
+   flminLabel = new QLabel("min range");
+   flmaxLabel = new QLabel("max range");
+
 
 
 
@@ -203,7 +228,13 @@ TowCam::TowCam(IniFile  iniFile)
    flyingPlot->yAxis->setLabel("altitude (m)");
    flyingPlot->xAxis->setRange(300,0);
 
-   nOfFlyingPlotPoints = 0;
+   flPlot = new QCustomPlot();
+   flPlot->addGraph();
+   flPlot->xAxis->setLabel("seconds in past");
+   flPlot->yAxis->setLabel("range (m)");
+   flPlot->xAxis->setRange(300,0);
+
+   nOfFLPlotPoints = 0;
    QDateTime t;
 
 
@@ -219,8 +250,23 @@ TowCam::TowCam(IniFile  iniFile)
    mainHLayout->addLayout(parameterLayout);
    mainHLayout->addWidget(flyingPlot,5);
 
-   for ( int i = 0; i < flyingHistory; i++ )
+   for ( int i = 0; i < MAX_FLYING_HISTORY; i++ )
       time[i] = -i;
+
+   for ( int i = 0; i < MAX_FLYING_HISTORY; i++ )
+      fltime[i] = -i;
+
+   QVBoxLayout	*flparameterLayout = new QVBoxLayout;
+   flparameterLayout->addWidget(flyAxisMaxEdit);
+   flparameterLayout->addWidget(flmaxLabel);
+
+   flparameterLayout->addStretch(5);
+   flparameterLayout->addWidget(flminLabel);
+   flparameterLayout->addWidget(flyAxisMinEdit);
+   QHBoxLayout *flmainHLayout = new QHBoxLayout();
+
+   flmainHLayout->addLayout(flparameterLayout);
+   flmainHLayout->addWidget(flPlot,5);
 
 
    QVBoxLayout *appLayout = new QVBoxLayout();
@@ -229,14 +275,10 @@ TowCam::TowCam(IniFile  iniFile)
    appLayout->addLayout(mainHLayout,5);
    appLayout->addLayout(switchLayout,2);
    appLayout->addLayout(indicatorLayout,1);
+   appLayout->addLayout(flmainHLayout,5);
+
 
    setLayout(appLayout);
-
-
-
-
-
-
 
 
 
@@ -344,7 +386,7 @@ void  TowCam::switchAction(int swID, bool switchState)
 }
 
 #if 1
-void TowCam::oneHzTimeout(QString DepthString, QString AltString, QString timeString)
+void TowCam::oneHzTimeout(QString DepthString, QString AltString, QString flAltString, QString timeString)
 {
    timeLabel->setText(timeString);
    // time to log a record
@@ -352,6 +394,7 @@ void TowCam::oneHzTimeout(QString DepthString, QString AltString, QString timeSt
 
   depthLabel->setText(DepthString);
   altitudeLabel->setText(AltString);
+  flRangeLabel->setText(flAltString);
 
 }
 #endif
@@ -359,6 +402,11 @@ void TowCam::oneHzTimeout(QString DepthString, QString AltString, QString timeSt
 void TowCam::gotANewDepth(QString theNewDepth)
 {
    depthDataWindow->append(theNewDepth);
+}
+
+void TowCam::gotANewRange(QString theNewRange)
+{
+   flDataWindow->append(theNewRange);
 }
 
 void TowCam::gotANewAltitude(QString theNewAlt)
@@ -407,6 +455,47 @@ void TowCam::updateAltPlot(double inAlt)
 
 }
 
+void TowCam::updateFLPlot(double inRng)
+{
+
+  QDateTime	nowTime = QDateTime::currentDateTime();
+  double currentTime = (double)nowTime.toTime_t() + (double)(nowTime.time().msec())/1000.0;
+
+   for ( int i = nOfFLPlotPoints; i > 0; i-- )
+      {
+
+         if ( i < MAX_FLYING_HISTORY )
+            {
+               fltime[i] = fltime[i-1];
+               range[i] = range[i-1];
+
+               flxData[i] =   currentTime - fltime[i];
+
+            }
+      }
+   fltime[0] = currentTime;
+   flxData[0] = 0.0;
+   range[0] = inRng;
+
+   if (  nOfFLPlotPoints < MAX_FLYING_HISTORY )
+      {
+         nOfFLPlotPoints++;
+      }
+
+   QVector<double> x(MAX_FLYING_HISTORY), y(MAX_FLYING_HISTORY);
+   x.clear();
+   y.clear();
+   for(int vectorN = 0; vectorN < nOfFLPlotPoints; vectorN++)
+    {
+        x.append(flxData[vectorN]);
+        y.append(range[vectorN]);
+    }
+   flPlot->graph(0)->setData(x,y);
+
+   flPlot->replot();
+
+}
+
 void TowCam::processDepthBounds()
 {
    QLineEdit *theSender = (QLineEdit *)sender();
@@ -426,6 +515,26 @@ void TowCam::processDepthBounds()
    flyingPlot->replot();
 
 }
+void TowCam::processRangeBounds()
+{
+   QLineEdit *theSender = (QLineEdit *)sender();
+
+   if(theSender == flyAxisMinEdit)
+      {
+         QString theText = flyAxisMinEdit->text();
+         flyMinBound = theText.toDouble();
+      }
+
+   else if(theSender == flyAxisMaxEdit)
+      {
+         QString theText = flyAxisMaxEdit->text();
+         flyMaxBound = theText.toDouble();
+      }
+   flPlot->yAxis->setRange(flyMinBound, flyMaxBound);
+   flPlot->replot();
+
+}
+
 
 
 TowCam::~TowCam()

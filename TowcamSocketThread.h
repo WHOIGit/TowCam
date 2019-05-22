@@ -15,6 +15,9 @@ typedef struct {
    QUdpSocket				*altitudeSocket;
    unsigned short			altitudeInSocketNumber;
 
+   QUdpSocket				*flSocket;
+   unsigned short			flInSocketNumber;
+
    QUdpSocket				*switchSocket;
    unsigned short			switchInSocketNumber;
    QHostAddress             switchHostAddress;
@@ -38,6 +41,9 @@ private:
    double                  depthMeasurement;
    double               pressureMeasurement;
 
+   double               flRange;
+   QDateTime            lastflRange;
+
    HabcamLog				*theLog;
    int                        loggingEnabled;
    int						secondsSinceSwitchUpdate;
@@ -48,11 +54,13 @@ private:
 signals:
    void  newAltitude(QString theAltitude);
    void  newDepth(QString theDepth);
+   void  newRange(QString theRange);
    void  newSwitches(int sw1, int sw2, int sw3, int sw4);
    void  noSwitchContact();
    void  updateAltPlot(double);
-   void  oneHzData(QString, QString, QString);
-   void                finished();
+   void  updateRangePlot(double);
+   void  oneHzData(QString, QString, QString,QString);
+   void  finished();
 
 
 public slots:
