@@ -18,44 +18,27 @@ int main(int argc, char *argv[])
       }
    else
    {
-#ifdef WINDOWS
-
-         enteredIniFileName = strdup("C:\\towcam.ini");
-
-#else
 
          QString myDesktop = QStandardPaths::locate(QStandardPaths::DesktopLocation,QString(), QStandardPaths::LocateDirectory);
          QString myIniFile = myDesktop + "//towcam.ini";
          enteredIniFileName = strdup(myIniFile.toLatin1().data());
-
-#endif
       }
-
+   qDebug() << "running";
    networkStructureT networkStructure;
    int	startup_return_code = iniFile.open_ini(enteredIniFileName);
    if(startup_return_code != GOOD_INI_FILE_READ)
       {
-#if 0
-         QMessageBox::warning(this, 	tr("towcam  GUI"),
-                              tr("no ini file found"),
-                              QMessageBox::Close | QMessageBox::Default);
-#endif
          qDebug() << "couldnt open inifile";
          exit(0);
       }
+   qDebug() << "opened inifile";
 
    int trial1 = iniFile.read_int("GENERAL","DEPTH_INCOMING_SOCKET",DEFAULT_IN_SOCKET);
 
 
    if(DEFAULT_IN_SOCKET == trial1 )
       {
-#if 0
-         QMessageBox::warning(this, 	tr("towcam  GUI"),
-                              tr("erroneous depth socket entry"),
-                              QMessageBox::Close | QMessageBox::Default);
-#endif
          exit(0);
-
       }
    else
       {
@@ -67,13 +50,7 @@ int main(int argc, char *argv[])
 
    if(DEFAULT_IN_SOCKET == trial1 )
       {
-#if 0
-         QMessageBox::warning(this, 	tr("towcam  GUI"),
-                              tr("erroneous altitude socket entry"),
-                              QMessageBox::Close | QMessageBox::Default);
-#endif
          exit(0);
-
       }
 
    else
@@ -81,29 +58,30 @@ int main(int argc, char *argv[])
          networkStructure.altitudeInSocketNumber = (unsigned short)  trial1;
       }
 
+   trial1 = iniFile.read_int("GENERAL","FL_ALTIMETER_INCOMING_SOCKET",DEFAULT_IN_SOCKET);
+
+
+   if(DEFAULT_IN_SOCKET == trial1 )
+      {
+         exit(0);
+      }
+
+   else
+      {
+         networkStructure.flInSocketNumber = (unsigned short)  trial1;
+      }
+qDebug() << "got to switches";
    trial1 = iniFile.read_int("GENERAL","SWITCH_INCOMING_SOCKET",DEFAULT_IN_SOCKET);
    char *scratchString = iniFile.read_string("GENERAL","SWITCH_OUTGOING_IP","NO_ADDRESS");
    if(!strcmp("NO_ADDRESS",scratchString))
       {
-#if 0
-         QMessageBox::warning(this, 	tr("towcam  GUI"),
-                              tr("erroneous switch outgoing IP entry"),
-                              QMessageBox::Close | QMessageBox::Default);
-#endif
          exit(0);
-
       }
    networkStructure.switchHostAddress.setAddress(scratchString);
 
    if(DEFAULT_IN_SOCKET == trial1 )
       {
- #if 0
-         QMessageBox::warning(this, 	tr("towcam  GUI"),
-                              tr("erroneous incoming switch socket entry"),
-                              QMessageBox::Close | QMessageBox::Default);
-#endif
          exit(0);
-
       }
 
    else
@@ -114,13 +92,7 @@ int main(int argc, char *argv[])
    trial1 = iniFile.read_int("GENERAL","SWITCH_OUTGOING_SOCKET",DEFAULT_IN_SOCKET);
    if(DEFAULT_IN_SOCKET == trial1 )
       {
-#if 0
-         QMessageBox::warning(this, 	tr("towcam  GUI"),
-                              tr("erroneous outgoing switch socket entry"),
-                              QMessageBox::Close | QMessageBox::Default);
-#endif
          exit(0);
-
       }
 
    else
@@ -131,7 +103,7 @@ int main(int argc, char *argv[])
 
 
    double latitude = iniFile.read_double("GENERAL", "LATITUDE", DEFAULT_LATITUDE);
-
+   qDebug() << "launching thread";
    QThread* thread = new QThread;
    TowcamSocketThread* socketThread = new TowcamSocketThread(networkStructure);
    socketThread->setLatitude(latitude);
@@ -153,11 +125,13 @@ int main(int argc, char *argv[])
 
    QObject::connect(socketThread,SIGNAL(noSwitchContact()), theMainWindow,SLOT(noSwitchContact()));
    QObject::connect(socketThread,SIGNAL(newAltitude(QString)), theMainWindow,SLOT(gotANewAltitude(QString)));
+   QObject::connect(socketThread,SIGNAL(newRange(QString)), theMainWindow,SLOT(gotANewRange(QString)));
    QObject::connect(socketThread,SIGNAL(newDepth(QString)), theMainWindow,SLOT(gotANewDepth(QString)));
    QObject::connect(theMainWindow,SIGNAL(switchCommand(QString)),socketThread, SLOT(sendSwitchCommand(QString)));
    QObject::connect(socketThread,SIGNAL(updateAltPlot(double)),theMainWindow, SLOT(updateAltPlot(double)));
+   QObject::connect(socketThread,SIGNAL(updateRangePlot(double)),theMainWindow, SLOT(updateFLPlot(double)));
    QObject::connect(socketThread,SIGNAL(newSwitches(int,int,int,int)),theMainWindow, SLOT(newSwitches(int,int,int,int)));
-   QObject::connect(socketThread,SIGNAL(oneHzData(QString,QString,QString)), theMainWindow, SLOT(oneHzTimeout(QString, QString, QString)));
+   QObject::connect(socketThread,SIGNAL(oneHzData(QString,QString,QString,QString)), theMainWindow, SLOT(oneHzTimeout(QString, QString, QString,QString)));
    theMainWindow->show();
 
    return a.exec();

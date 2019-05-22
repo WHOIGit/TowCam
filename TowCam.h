@@ -18,7 +18,7 @@
 #define  DEFAULT_IN_SOCKET    99999
 
 
-#define PROGRAM_VERSION    "1.0"
+#define PROGRAM_VERSION    "1.1"
 #define DEFAULT_LATITUDE   30.0
 
 typedef enum {
@@ -73,6 +73,10 @@ private:
 	QUdpSocket				*altitudeSocket;
 	unsigned short			altitudeInSocketNumber;
 
+    QUdpSocket				*flSocket;
+    unsigned short			flInSocketNumber;
+
+
 	QUdpSocket				*switchSocket;
 	unsigned short			switchInSocketNumber;
 	QHostAddress			switchHostAddress;
@@ -94,12 +98,18 @@ private:
    //QLabel                  *depthValueLabel;
 
    QLabel                  *altitudeLabel;
+   QLabel                  *flRangeLabel;
    //QLabel                  *altitudeValueLabel;
 
 	int		nOfFlyingPlotPoints;
 	int      flyingHistory;
 
+    int		nOfFLPlotPoints;
+    int      flHistory;
+
+
     QCustomPlot		*flyingPlot;
+    QCustomPlot		*flPlot;
     //BottomCurve	*bottomCurve;
 
 
@@ -108,17 +118,31 @@ private:
 	QLabel					*minLabel;
 	QLabel					*maxLabel;
 
+    QLineEdit				*flyAxisMinEdit;
+    QLineEdit				*flyAxisMaxEdit;
+    QLabel					*flminLabel;
+    QLabel					*flmaxLabel;
+
 	double					yMinBound;
-	double					yMaxBound;
+    double					yMaxBound;
+
+    double					flyMinBound;
+    double					flyMaxBound;
 
 	double	depth[MAX_N_OF_FLYING_POINTS];
 	double	altitude[MAX_N_OF_FLYING_POINTS];
 	double	time[MAX_N_OF_FLYING_POINTS];
-	double xData[MAX_N_OF_FLYING_POINTS];
+    double  xData[MAX_N_OF_FLYING_POINTS];
+    double  range[MAX_N_OF_FLYING_POINTS];
+    double	fltime[MAX_N_OF_FLYING_POINTS];
+    double  flxData[MAX_N_OF_FLYING_POINTS];
+
+
 
 
    QTextEdit            *altimeterDataWindow;
    QTextEdit            *depthDataWindow;
+   QTextEdit            *flDataWindow;
 
    QPushButton          *pumpPushButton;
    bool                 pumpIsOn;
@@ -126,14 +150,18 @@ private:
    QFont						offFont;
 
 private slots:
-	void	processDepthBounds();
+   void	processDepthBounds();
+   void	processRangeBounds();
+
    void  gotANewDepth(QString);
    void  gotANewAltitude(QString);
+   void  gotANewRange(QString);
    void  updateAltPlot(double);
+   void  updateFLPlot(double);
    void newSwitches(int sw1,int sw2,int sw3,int sw4);
    void noSwitchContact();
 
-   void    oneHzTimeout(QString, QString, QString);
+   void    oneHzTimeout(QString, QString, QString,QString);
 
 
 signals:

@@ -8,6 +8,7 @@ TowcamSocketThread::TowcamSocketThread(networkStructureT theNetworkStructure) :
    myNetworkStructure = theNetworkStructure;
    depthMeasurement = -999.99;
    altimeterRange = -999.99;
+   flRange = -99.99;
 
 }
 
@@ -27,9 +28,13 @@ void TowcamSocketThread::startup()
     myNetworkStructure.depthSocket = new   QUdpSocket();
     myNetworkStructure.depthSocket->bind(myNetworkStructure.depthInSocketNumber);
 
+    myNetworkStructure.flSocket = new   QUdpSocket();
+    myNetworkStructure.flSocket->bind(myNetworkStructure.flInSocketNumber);
+
     connect (myNetworkStructure.altitudeSocket, SIGNAL(readyRead()),this,SLOT(sledSocketDataPending()));
     connect (myNetworkStructure.switchSocket, SIGNAL(readyRead()),this,SLOT(sledSocketDataPending()));
     connect (myNetworkStructure.depthSocket, SIGNAL(readyRead()),this,SLOT(sledSocketDataPending()));
+    connect (myNetworkStructure.flSocket, SIGNAL(readyRead()),this,SLOT(sledSocketDataPending()));
 
     theLog = new HabcamLog();
     theLog->setLoggingEnabled(true);
@@ -47,11 +52,13 @@ void TowcamSocketThread::oneHzTimeout()
    nowString = currentDT.currentDateTime().toUTC().toString("yyyy/MM/dd hh:mm:ss");
 
    // time to log a record
-   QString logString = QString::number(altimeterRange,'f',2) + "\t" + QString::number(depthMeasurement,'g',2);
+   QString logString = QString::number(altimeterRange,'f',2) + "\t" + QString::number(depthMeasurement,'f',2);
    theLog->timeStampAndLogThisString("TOW",logString);
 
    emit updateAltPlot(altimeterRange);
-   emit oneHzData("Depth: " + QString::number(depthMeasurement,'f',2) + " m", "Alt: "+  QString::number(altimeterRange,'f',2) + " m", nowString);
+   emit updateRangePlot(flRange);
+   emit oneHzData("Depth: " + QString::number(depthMeasurement,'f',2) + " m", "Alt: "+  QString::number(altimeterRange,'f',2) + " m", "Range: " +
+                  QString::number(flRange,'f',2) + "m",nowString);
 
    myNetworkStructure.switchSocket->writeDatagram("\r",myNetworkStructure.switchHostAddress,myNetworkStructure.switchOutSocketNumber);
    secondsSinceSwitchUpdate++;
@@ -183,6 +190,21 @@ void TowcamSocketThread::sledSocketDataPending()
          emit newDepth((QString)buffer.data());
 
       }
+   else if(theSocket == myNetworkStructure.flSocket)
+   {
+       double tempRange;
+       int items = sscanf( buffer.data(), "R%lf",&tempRange);
+       if(items)
+          {
+             flRange = tempRange;
+             lastflRange = QDateTime::currentDateTime ();
+
+             buffer[buffer.size()-2] = '\0';
+
+             emit newRange((QString)buffer.data());
+          }
+
+   }
 
    else if(theSocket == myNetworkStructure.switchSocket)
       {
