@@ -418,7 +418,7 @@ void TowCam::updateAltPlot(double inAlt)
 {
 
   QDateTime	nowTime = QDateTime::currentDateTime();
-  double currentTime = (double)nowTime.toTime_t() + (double)(nowTime.time().msec())/1000.0;
+  double currentTime = static_cast<double>(nowTime.toMSecsSinceEpoch())/1000.0;
 
    for ( int i = nOfFlyingPlotPoints; i > 0; i-- )
       {
@@ -459,7 +459,7 @@ void TowCam::updateFLPlot(double inRng)
 {
 
   QDateTime	nowTime = QDateTime::currentDateTime();
-  double currentTime = (double)nowTime.toTime_t() + (double)(nowTime.time().msec())/1000.0;
+  double currentTime = static_cast<double>(nowTime.toMSecsSinceEpoch())/1000.0;
 
    for ( int i = nOfFLPlotPoints; i > 0; i-- )
       {
