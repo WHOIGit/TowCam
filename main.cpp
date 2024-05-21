@@ -134,5 +134,10 @@ qDebug() << "got to switches";
    QObject::connect(socketThread,SIGNAL(oneHzData(QString,QString,QString,QString)), theMainWindow, SLOT(oneHzTimeout(QString, QString, QString,QString)));
    theMainWindow->show();
 
+   // Increase font to 12pt
+   auto font = QApplication::font();
+   font.setPointSize(12);
+   QApplication::setFont(font);
+   
    return a.exec();
 }
