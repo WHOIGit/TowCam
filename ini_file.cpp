@@ -7,7 +7,7 @@ program conducted jointly with Louis Whitcomb of the Johns Hopkins University.  
 
 #include <stdio.h>
 #include <string.h>
-#include "compilation.h"
+//#include "compilation.h"
 
 #include "ini_file.h"
 

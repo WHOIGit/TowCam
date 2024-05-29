@@ -6,7 +6,7 @@
 #include <QDebug>
 
 #include "qcustomplot.h"
-#include "compilation.h"
+//#include "compilation.h"
 
 #include "ini_file.h"
 #include "HCLog.h"
