@@ -182,7 +182,8 @@ TowCam::TowCam(IniFile  iniFile)
 
    for(int switchNumber = 0; switchNumber < 4; switchNumber++)
       {
-         switchLayout->addWidget(switches[switchNumber]);
+        switchLayout->addWidget(switches[switchNumber]);
+        switches[switchNumber]->setVisible(switchNumber < N_OF_DISPLAYED_SWITCH_WIDGETS);
       }
 
 

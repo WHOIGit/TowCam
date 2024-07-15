@@ -21,6 +21,9 @@
 #define PROGRAM_VERSION    "1.1"
 #define DEFAULT_LATITUDE   30.0
 
+// Number of switches to show in GUI, must be <= 4, the hard-coded max
+#define N_OF_DISPLAYED_SWITCH_WIDGETS 2
+
 typedef enum {
    BAILEY,
    ADAM_DIO,
