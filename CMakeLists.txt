@@ -37,8 +37,8 @@ if(APPLE)
     get_filename_component(qt_bin_directory "${qmake_executable}" DIRECTORY)
     find_program(MACDEPLOYQT_EXECUTABLE macdeployqt HINTS "${qt_bin_directory}" REQUIRED)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND "${MACDEPLOYQT_EXECUTABLE}"
-            ARGS ${PROJECT_NAME}.app
+            COMMAND ${MACDEPLOYQT_EXECUTABLE} ${PROJECT_NAME}.app -dmg
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMENT "Run macdeployqt to create a macOS bundle"
     )
 elseif(WIN32)
