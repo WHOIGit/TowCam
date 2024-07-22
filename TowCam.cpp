@@ -144,11 +144,12 @@ TowCam::TowCam(IniFile  iniFile)
 
 
 
+   QHBoxLayout *switchLayout = new QHBoxLayout();
    for(int switchNumber = 0; switchNumber < 4; switchNumber++)
       {
          char scratchSwitchName[256];
          snprintf(scratchSwitchName,256,"SWITCH_%d_NAME",switchNumber+1);
-         char *newSwitchName = iniFile.read_string("GENERAL",scratchSwitchName,"UNKNOWN");
+         QString newSwitchName = QString::fromLocal8Bit(iniFile.read_string("GENERAL",scratchSwitchName,"UNKNOWN"), -1);
          switches[switchNumber] = new SwitchWidget(switchNumber,(QString)newSwitchName);
          snprintf(scratchSwitchName,256,"SWITCH_%d_TYPE",switchNumber + 1);
          int thisSwitchType = iniFile.read_int("GENERAL",scratchSwitchName,(int)UNKNOWN_SWITCH_TYPE);
@@ -174,20 +175,12 @@ TowCam::TowCam(IniFile  iniFile)
                      switchChannel[switchNumber] = ERRONEOUS_SWITCH_CHANNEL;
                   }
             }
+         if (newSwitchName.isEmpty() || !newSwitchName.compare(QStringLiteral("UNKNOWN"), Qt::CaseInsensitive) || !newSwitchName.compare(QStringLiteral("UNUSED"), Qt::CaseInsensitive)) {
+             qInfo() << "Hiding switch #" << switchNumber << " in GUI. ";
+             switches[switchNumber]->setVisible(false);
+         }
+         switchLayout->addWidget(switches[switchNumber]);
       }
-
-
-
-   QHBoxLayout *switchLayout = new QHBoxLayout();
-
-   for(int switchNumber = 0; switchNumber < 4; switchNumber++)
-      {
-        switchLayout->addWidget(switches[switchNumber]);
-        switches[switchNumber]->setVisible(switchNumber < N_OF_DISPLAYED_SWITCH_WIDGETS);
-      }
-
-
-
 
    QHBoxLayout    *indicatorLayout = new QHBoxLayout();
    indicatorLayout->addLayout(depthLayout);
