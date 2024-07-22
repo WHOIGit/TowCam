@@ -18,7 +18,7 @@
 #define  DEFAULT_IN_SOCKET    99999
 
 
-#define PROGRAM_VERSION    "1.1"
+#define PROGRAM_VERSION    "1.2"
 #define DEFAULT_LATITUDE   30.0
 
 typedef enum {

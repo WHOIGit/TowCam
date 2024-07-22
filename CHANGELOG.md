@@ -1,8 +1,9 @@
 # TowCam GUI Changelog
 
-## [Unreleased]
+## [1.2 (Unreleased)]
 
 ### Changed
+- Use CMake for building
 - Remove calls to QDateTime::toTime (method deprecated in Qt5, removed in Qt6)
 - Update QCustomPlot to version 2
 - Increase font size to 12pt
