@@ -35,23 +35,19 @@ target_compile_definitions(${PROJECT_NAME}
             TOWCAM_VERSION_MINOR="${PROJECT_VERSION_MINOR}")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt::Widgets Qt::Gui Qt::Network Qt::PrintSupport)
+
 if(APPLE)
-    set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
-    get_target_property(qmake_executable Qt::qmake IMPORTED_LOCATION)
-    get_filename_component(qt_bin_directory "${qmake_executable}" DIRECTORY)
-    find_program(MACDEPLOYQT_EXECUTABLE macdeployqt HINTS "${qt_bin_directory}" REQUIRED)
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${MACDEPLOYQT_EXECUTABLE} ${PROJECT_NAME}.app -dmg
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-            COMMENT "Run macdeployqt to create a macOS bundle"
-    )
-elseif(WIN32)
+  set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
+endif()
+
+if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
 endif()
 
 install(TARGETS ${PROJECT_NAME}
-        BUNDLE  DESTINATION .
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    BUNDLE DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 qt_generate_deploy_app_script(
@@ -59,6 +55,19 @@ qt_generate_deploy_app_script(
     OUTPUT_SCRIPT deploy_script
     NO_UNSUPPORTED_PLATFORM_ERROR
     NO_TRANSLATIONS
+    DEPLOY_TOOL_OPTIONS ${DEPLOY_TOOL_OPTIONS}
+    # Fedora installs Qt libraries into /lib64, which is excluded due to QT_DEPLOY_IGNORED_LIB_DIRS
+    # POST_INCLUDE_REGEXES here will make sure at at least the Qt libraries are grabbed.
+    POST_INCLUDE_REGEXES "libQt6.*"
 )
 
+
 install(SCRIPT ${deploy_script})
+
+set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
+string(TOLOWER "${CPACK_PACKAGE_NAME}-${CMAKE_PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}" CPACK_PACKAGE_FILE_NAME)
+set(CPACK_VERBATIM_VARIABLES ON)
+if(NOT APPLE)
+    set(CPACK_PACKAGING_INSTALL_PREFIX "/${PROJECT_NAME}")
+endif()
+include(CPack)
