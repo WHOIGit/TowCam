@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 
 project(towcam
-        VERSION 0.1.1
+        VERSION 1.2
         LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 11)
@@ -29,6 +29,10 @@ target_sources(${PROJECT_NAME}
         HCLog.h
         HCLog.cpp
 )
+
+target_compile_definitions(${PROJECT_NAME} 
+    PRIVATE TOWCAM_VERSION_MAJOR="${PROJECT_VERSION_MAJOR}"
+            TOWCAM_VERSION_MINOR="${PROJECT_VERSION_MINOR}")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt::Widgets Qt::Gui Qt::Network Qt::PrintSupport)
 if(APPLE)

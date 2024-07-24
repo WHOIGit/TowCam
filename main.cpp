@@ -125,8 +125,7 @@ qDebug() << "got to switches";
 
    theMainWindow = new TowCam(iniFile);
    iniFile.close_ini();
-   QString	windowTitle;
-   windowTitle = "macTowcam V " + (QString) PROGRAM_VERSION + " compiled "  + (QString) __DATE__;
+   const QString windowTitle = QStringLiteral("TowCam v" TOWCAM_VERSION_MAJOR "." TOWCAM_VERSION_MINOR " compiled on " __DATE__);
 
    theMainWindow->setWindowTitle(windowTitle);
 
