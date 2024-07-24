@@ -17,8 +17,11 @@ To build TowCam:
 git clone https://github.com/WHOIGit/TowCam   # Clone this git repository
 cd towcam
 mkdir build && cd build                       # Make a build directory
-cmake .. && cmake --build .                   # Configure and build TowCam
-cmake --install .                             # Package the application for OSX or Windows
+cmake .. && cmake --build .                   # Configure and build the 'towcam' application.
+cpack -G $GEN                                 # Package the application.  Typical values of $GEN would be:
+                                              # Windows: ZIP  (ZIP archive w/ Qt libraries)
+                                              # Linux:   TGZ  (gzipped tar archive (.tar.gz) w/ Qt libraries)
+                                              # OSX:     DragNDrop (Disk image (.dmg) with shortcut to Applications for install)
 ```
 
 # Configuration
