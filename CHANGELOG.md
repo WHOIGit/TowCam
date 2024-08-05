@@ -1,6 +1,6 @@
 # TowCam GUI Changelog
 
-## [1.2 (Unreleased)]
+## [1.2 (2024-08-05)]
 
 ### Changed
 - Use CMake for building
