@@ -16,7 +16,7 @@ jobs:
       fail-fast: true
 
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest, macos-13]
         build_type: [Release]
         include:
           - os: windows-latest
@@ -26,6 +26,9 @@ jobs:
             cpack_generator: TGZ
             binary_package: "*linux*tar.gz"
           - os: macos-latest
+            cpack_generator: DragNDrop
+            binary_package: "*darwin*dmg"
+          - os: macos-13
             cpack_generator: DragNDrop
             binary_package: "*darwin*dmg"
         
