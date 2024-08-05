@@ -144,11 +144,12 @@ TowCam::TowCam(IniFile  iniFile)
 
 
 
+   QHBoxLayout *switchLayout = new QHBoxLayout();
    for(int switchNumber = 0; switchNumber < 4; switchNumber++)
       {
          char scratchSwitchName[256];
          snprintf(scratchSwitchName,256,"SWITCH_%d_NAME",switchNumber+1);
-         char *newSwitchName = iniFile.read_string("GENERAL",scratchSwitchName,"UNKNOWN");
+         QString newSwitchName = QString::fromLocal8Bit(iniFile.read_string("GENERAL",scratchSwitchName,"UNKNOWN"), -1);
          switches[switchNumber] = new SwitchWidget(switchNumber,(QString)newSwitchName);
          snprintf(scratchSwitchName,256,"SWITCH_%d_TYPE",switchNumber + 1);
          int thisSwitchType = iniFile.read_int("GENERAL",scratchSwitchName,(int)UNKNOWN_SWITCH_TYPE);
@@ -174,19 +175,12 @@ TowCam::TowCam(IniFile  iniFile)
                      switchChannel[switchNumber] = ERRONEOUS_SWITCH_CHANNEL;
                   }
             }
-      }
-
-
-
-   QHBoxLayout *switchLayout = new QHBoxLayout();
-
-   for(int switchNumber = 0; switchNumber < 4; switchNumber++)
-      {
+         if (newSwitchName.isEmpty() || !newSwitchName.compare(QStringLiteral("UNKNOWN"), Qt::CaseInsensitive) || !newSwitchName.compare(QStringLiteral("UNUSED"), Qt::CaseInsensitive)) {
+             qInfo() << "Hiding switch #" << switchNumber << " in GUI. ";
+             switches[switchNumber]->setVisible(false);
+         }
          switchLayout->addWidget(switches[switchNumber]);
       }
-
-
-
 
    QHBoxLayout    *indicatorLayout = new QHBoxLayout();
    indicatorLayout->addLayout(depthLayout);
@@ -418,7 +412,7 @@ void TowCam::updateAltPlot(double inAlt)
 {
 
   QDateTime	nowTime = QDateTime::currentDateTime();
-  double currentTime = (double)nowTime.toTime_t() + (double)(nowTime.time().msec())/1000.0;
+  double currentTime = static_cast<double>(nowTime.toMSecsSinceEpoch())/1000.0;
 
    for ( int i = nOfFlyingPlotPoints; i > 0; i-- )
       {
@@ -459,7 +453,7 @@ void TowCam::updateFLPlot(double inRng)
 {
 
   QDateTime	nowTime = QDateTime::currentDateTime();
-  double currentTime = (double)nowTime.toTime_t() + (double)(nowTime.time().msec())/1000.0;
+  double currentTime = static_cast<double>(nowTime.toMSecsSinceEpoch())/1000.0;
 
    for ( int i = nOfFLPlotPoints; i > 0; i-- )
       {

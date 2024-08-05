@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
    {
 
          QString myDesktop = QStandardPaths::locate(QStandardPaths::DesktopLocation,QString(), QStandardPaths::LocateDirectory);
-         QString myIniFile = myDesktop + "//towcam.ini";
+         QString myIniFile = QDir::toNativeSeparators(myDesktop + "towcam.ini");
          enteredIniFileName = strdup(myIniFile.toLatin1().data());
       }
    qDebug() << "running";
@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
    int	startup_return_code = iniFile.open_ini(enteredIniFileName);
    if(startup_return_code != GOOD_INI_FILE_READ)
       {
+         QMessageBox::critical(nullptr, "Unable to open ini file", QStringLiteral("Unable to open config file from:\n\n%1").arg(enteredIniFileName));
          qDebug() << "couldnt open inifile";
          exit(0);
       }
@@ -38,6 +39,7 @@ int main(int argc, char *argv[])
 
    if(DEFAULT_IN_SOCKET == trial1 )
       {
+         QMessageBox::critical(nullptr, "Invalid config file", QStringLiteral("Unable to open config file from:\n\n%1\n\nNo \"DEPTH_INCOMING_SOCKET\" value found.").arg(enteredIniFileName));
          exit(0);
       }
    else
@@ -50,6 +52,7 @@ int main(int argc, char *argv[])
 
    if(DEFAULT_IN_SOCKET == trial1 )
       {
+         QMessageBox::critical(nullptr, "Invalid config file", QStringLiteral("Unable to open config file from:\n\n%1\n\nNo \"ALTIMETER_INCOMING_SOCKET\" value found.").arg(enteredIniFileName));
          exit(0);
       }
 
@@ -63,6 +66,7 @@ int main(int argc, char *argv[])
 
    if(DEFAULT_IN_SOCKET == trial1 )
       {
+         QMessageBox::critical(nullptr, "Invalid config file", QStringLiteral("Unable to open config file from:\n\n%1\n\nNo \"FL_ALTIMETER_INCOMING_SOCKET\" value found.").arg(enteredIniFileName));
          exit(0);
       }
 
@@ -75,13 +79,15 @@ qDebug() << "got to switches";
    char *scratchString = iniFile.read_string("GENERAL","SWITCH_OUTGOING_IP","NO_ADDRESS");
    if(!strcmp("NO_ADDRESS",scratchString))
       {
+         QMessageBox::critical(nullptr, "Invalid config file", QStringLiteral("Unable to open config file from:\n\n%1\n\nNo \"SWITCH_OUTGOING_IP\" value found.").arg(enteredIniFileName));
          exit(0);
       }
    networkStructure.switchHostAddress.setAddress(scratchString);
 
    if(DEFAULT_IN_SOCKET == trial1 )
       {
-         exit(0);
+          QMessageBox::critical(nullptr, "Invalid config file", QStringLiteral("Unable to open config file from:\n\n%1\n\nNo \"SWITCH_INCOMING_SOCKET\" value found.").arg(enteredIniFileName));
+          exit(0);
       }
 
    else
@@ -92,7 +98,8 @@ qDebug() << "got to switches";
    trial1 = iniFile.read_int("GENERAL","SWITCH_OUTGOING_SOCKET",DEFAULT_IN_SOCKET);
    if(DEFAULT_IN_SOCKET == trial1 )
       {
-         exit(0);
+          QMessageBox::critical(nullptr, "Invalid config file", QStringLiteral("Unable to open config file from:\n\n%1\n\nNo \"SWITCH_OUTGOING_SOCKET\" value found.").arg(enteredIniFileName));
+          exit(0);
       }
 
    else
@@ -118,10 +125,10 @@ qDebug() << "got to switches";
 
    theMainWindow = new TowCam(iniFile);
    iniFile.close_ini();
-   QString	windowTitle;
-   windowTitle = "macTowcam V " + (QString) PROGRAM_VERSION + " compiled "  + (QString) __DATE__;
+   const QString windowTitle = QStringLiteral("TowCam v" TOWCAM_VERSION_MAJOR "." TOWCAM_VERSION_MINOR " compiled on " __DATE__);
 
    theMainWindow->setWindowTitle(windowTitle);
+
 
    QObject::connect(socketThread,SIGNAL(noSwitchContact()), theMainWindow,SLOT(noSwitchContact()));
    QObject::connect(socketThread,SIGNAL(newAltitude(QString)), theMainWindow,SLOT(gotANewAltitude(QString)));
@@ -134,5 +141,10 @@ qDebug() << "got to switches";
    QObject::connect(socketThread,SIGNAL(oneHzData(QString,QString,QString,QString)), theMainWindow, SLOT(oneHzTimeout(QString, QString, QString,QString)));
    theMainWindow->show();
 
+   // Increase font to 12pt
+   auto font = QApplication::font();
+   font.setPointSize(12);
+   QApplication::setFont(font);
+   
    return a.exec();
 }

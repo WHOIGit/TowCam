@@ -6,7 +6,7 @@
 #include <QDebug>
 
 #include "qcustomplot.h"
-#include "compilation.h"
+//#include "compilation.h"
 
 #include "ini_file.h"
 #include "HCLog.h"
@@ -17,8 +17,6 @@
 
 #define  DEFAULT_IN_SOCKET    99999
 
-
-#define PROGRAM_VERSION    "1.1"
 #define DEFAULT_LATITUDE   30.0
 
 typedef enum {

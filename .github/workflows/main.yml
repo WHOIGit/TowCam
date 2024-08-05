@@ -1,0 +1,86 @@
+
+# This starter workflow is for a CMake project running on multiple platforms. There is a different starter workflow if you just want a single platform.
+# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
+# name: CMake on multiple platforms
+
+on: push
+
+jobs:
+  build:
+    permissions:
+      contents: write
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
+      fail-fast: true
+
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest, macos-13]
+        build_type: [Release]
+        include:
+          - os: windows-latest
+            cpack_generator: ZIP
+            binary_package: "*windows*zip"
+          - os: ubuntu-latest
+            cpack_generator: TGZ
+            binary_package: "*linux*tar.gz"
+          - os: macos-latest
+            cpack_generator: DragNDrop
+            binary_package: "*darwin*dmg"
+          - os: macos-13
+            cpack_generator: DragNDrop
+            binary_package: "*darwin*dmg"
+        
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set reusable strings
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+          version: '6.7.1'
+          install-deps: 'true'
+          modules: 'qtserialport'
+          set-env: 'true'
+          aqtversion: '==3.1.*'
+          cache: 'true'
+
+    - name: Configure CMake
+      run: >
+        cmake -B ${{ steps.strings.outputs.build-output-dir }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -S ${{ github.workspace }}
+
+    - name: Build
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+
+#   - name: Package Source
+#     if: ${{ matrix.os == 'ubuntu-latest' && startsWith(github.ref, 'refs/tags/v') }}
+#     run: |
+#       cd ${{ steps.strings.outputs.build-output-dir }}
+#       cpack -G "TGZ;ZIP" --config CPackSourceConfig.cmake
+
+#   - name: Upload Source Archives
+#     if: ${{ matrix.os == 'ubuntu-latest'  && startsWith(github.ref, 'refs/tags/v') }}
+#     uses: ncipollo/release-action@v1
+#     with:
+#       artifacts: "${{ steps.strings.outputs.build-output-dir }}/*Source.*"
+
+    - name: Package Binary
+      if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      run: |
+        cd ${{ steps.strings.outputs.build-output-dir }}
+        cpack -G "${{ matrix.cpack_generator }}" --config CPackConfig.cmake
+
+    - name: Upload Binary Archives
+      if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "${{ steps.strings.outputs.build-output-dir }}/${{ matrix.binary_package }}"
+        allowUpdates: 'true'
